@@ -214,6 +214,17 @@ namespace Nop.Services.News
             _newsCommentRepository.Delete(newsComment);
         }
 
+        /// <summary>
+        /// Deletes a news comments
+        /// </summary>
+        /// <param name="newsComments">News comments</param>
+        public virtual void DeleteNewsComments(IList<NewsComment> newsComments)
+        {
+            if (newsComments == null)
+                throw new ArgumentNullException("newsComments");
+
+            _newsCommentRepository.Delete(newsComments);
+        }
         #endregion
     }
 }

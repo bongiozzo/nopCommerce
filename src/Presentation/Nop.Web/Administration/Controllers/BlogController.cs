@@ -4,6 +4,7 @@ using System.Linq;
 using System.Web.Mvc;
 using Nop.Admin.Extensions;
 using Nop.Admin.Models.Blogs;
+using Nop.Core;
 using Nop.Core.Domain.Blogs;
 using Nop.Core.Domain.Customers;
 using Nop.Services.Blogs;
@@ -354,13 +355,17 @@ namespace Nop.Admin.Controllers
             if (selectedIds != null)
             {
                 var comments = _blogService.GetBlogCommentsByIds(selectedIds.ToArray());
-                foreach (var comment in comments)
+                foreach (var blogPost in comments.GroupBy(b=>b.BlogPostId))
                 {
-                    var blogPost = comment.BlogPost;
-                    _blogService.DeleteBlogComment(comment);
+                    var curentBlogPost = blogPost.FirstOrDefault().Return(b=>b.BlogPost, null);
+                    if(curentBlogPost==null)
+                        continue;
+
+                    _blogService.DeleteBlogComments(blogPost.Select(b=>b).ToList());
+
                     //update totals
-                    blogPost.CommentCount = blogPost.BlogComments.Count;
-                    _blogService.UpdateBlogPost(blogPost);
+                    curentBlogPost.CommentCount = curentBlogPost.BlogComments.Count;
+                    _blogService.UpdateBlogPost(curentBlogPost);
                 }
             }
 

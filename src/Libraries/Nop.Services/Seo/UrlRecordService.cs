@@ -147,6 +147,21 @@ namespace Nop.Services.Seo
         }
 
         /// <summary>
+        /// Deletes an URL records
+        /// </summary>
+        /// <param name="urlRecords">URL records</param>
+        public virtual void DeleteUrlRecords(IList<UrlRecord> urlRecords)
+        {
+            if (urlRecords == null)
+                throw new ArgumentNullException("urlRecords");
+
+            _urlRecordRepository.Delete(urlRecords);
+
+            //cache
+            _cacheManager.RemoveByPattern(URLRECORD_PATTERN_KEY);
+        }
+
+        /// <summary>
         /// Gets an URL record
         /// </summary>
         /// <param name="urlRecordId">URL record identifier</param>
@@ -158,7 +173,7 @@ namespace Nop.Services.Seo
 
             return _urlRecordRepository.GetById(urlRecordId);
         }
-
+        
         /// <summary>
         /// Inserts an URL record
         /// </summary>

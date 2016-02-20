@@ -286,6 +286,18 @@ namespace Nop.Services.Blogs
             _blogCommentRepository.Delete(blogComment);
         }
 
+        /// <summary>
+        /// Deletes a blog comments
+        /// </summary>
+        /// <param name="blogComments">Blog comments</param>
+        public virtual void DeleteBlogComments(IList<BlogComment> blogComments)
+        {
+            if (blogComments == null)
+                throw new ArgumentNullException("blogComments");
+
+            _blogCommentRepository.Delete(blogComments);
+        }
+
         #endregion
     }
 }

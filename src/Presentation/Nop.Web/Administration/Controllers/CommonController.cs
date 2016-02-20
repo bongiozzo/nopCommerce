@@ -653,15 +653,7 @@ namespace Nop.Admin.Controllers
 
             if (selectedIds != null)
             {
-                var urlRecords = new List<UrlRecord>();
-                foreach (var id in selectedIds)
-                {
-                    var urlRecord = _urlRecordService.GetUrlRecordById(id);
-                    if (urlRecord != null)
-                        urlRecords.Add(urlRecord);
-                }
-                foreach (var urlRecord in urlRecords)
-                    _urlRecordService.DeleteUrlRecord(urlRecord);
+                _urlRecordService.DeleteUrlRecords(selectedIds.Select(urlId => _urlRecordService.GetUrlRecordById(urlId)).Where(u => u != null).ToList());
             }
 
             return Json(new { Result = true });

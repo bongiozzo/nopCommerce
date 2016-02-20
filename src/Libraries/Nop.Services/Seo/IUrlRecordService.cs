@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Nop.Core;
 using Nop.Core.Domain.Seo;
 
@@ -13,6 +14,12 @@ namespace Nop.Services.Seo
         /// </summary>
         /// <param name="urlRecord">URL record</param>
         void DeleteUrlRecord(UrlRecord urlRecord);
+
+        /// <summary>
+        /// Deletes an URL records
+        /// </summary>
+        /// <param name="urlRecords">URL records</param>
+        void DeleteUrlRecords(IList<UrlRecord> urlRecords);
 
         /// <summary>
         /// Gets an URL record

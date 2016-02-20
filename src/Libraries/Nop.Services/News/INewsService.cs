@@ -73,5 +73,11 @@ namespace Nop.Services.News
         /// <param name="newsComment">News comment</param>
         void DeleteNewsComment(NewsComment newsComment);
 
+        /// <summary>
+        /// Deletes a news comments
+        /// </summary>
+        /// <param name="newsComments">News comments</param>
+        void DeleteNewsComments(IList<NewsComment> newsComments);
+
     }
 }

@@ -99,5 +99,11 @@ namespace Nop.Services.Blogs
         /// </summary>
         /// <param name="blogComment">Blog comment</param>
         void DeleteBlogComment(BlogComment blogComment);
+
+        /// <summary>
+        /// Deletes a blog comments
+        /// </summary>
+        /// <param name="blogComments">Blog comments</param>
+        void DeleteBlogComments(IList<BlogComment> blogComments);
     }
 }

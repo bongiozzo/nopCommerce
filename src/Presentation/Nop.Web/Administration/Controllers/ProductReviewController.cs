@@ -14,6 +14,7 @@ using Nop.Services.Stores;
 using Nop.Web.Framework;
 using Nop.Web.Framework.Controllers;
 using Nop.Web.Framework.Kendoui;
+using Nop.Core;
 
 namespace Nop.Admin.Controllers
 {
@@ -251,18 +252,22 @@ namespace Nop.Admin.Controllers
         [HttpPost]
         public ActionResult DeleteSelected(ICollection<int> selectedIds)
         {
-            if (!_permissionService.Authorize(StandardPermissionProvider.ManageProductReviews))
+            if (!_permissionService.Authorize(StandardPermissionProvider.ManageBlog))
                 return AccessDeniedView();
 
             if (selectedIds != null)
             {
                 var productReviews = _productService.GetProducReviewsByIds(selectedIds.ToArray());
-                foreach (var productReview in productReviews)
+                foreach (var productRewiews in productReviews.GroupBy(b => b.ProductId))
                 {
-                    var product = productReview.Product;
-                    _productService.DeleteProductReview(productReview);
+                    var curentProduct    = productRewiews.FirstOrDefault().Return(b => b.Product, null);
+                    if (curentProduct == null)
+                        continue;
+
+                    _productService.DeleteProductReviews(productRewiews.Select(b => b).ToList());
+
                     //update product totals
-                    _productService.UpdateProductReviewTotals(product);
+                    _productService.UpdateProductReviewTotals(curentProduct);
                 }
             }
 

@@ -16,6 +16,7 @@ using Nop.Web.Framework;
 using Nop.Web.Framework.Controllers;
 using Nop.Web.Framework.Kendoui;
 using Nop.Web.Framework.Mvc;
+using Nop.Core;
 
 namespace Nop.Admin.Controllers
 {
@@ -357,7 +358,7 @@ namespace Nop.Admin.Controllers
 
             return new NullJsonResult();
         }
-
+        
         [HttpPost]
         public ActionResult DeleteSelectedComments(ICollection<int> selectedIds)
         {
@@ -367,13 +368,17 @@ namespace Nop.Admin.Controllers
             if (selectedIds != null)
             {
                 var comments = _newsService.GetNewsCommentsByIds(selectedIds.ToArray());
-                foreach (var comment in comments)
+                foreach (var newsPost in comments.GroupBy(b => b.NewsItemId))
                 {
-                    var newsItem = comment.NewsItem;
-                    _newsService.DeleteNewsComment(comment);
+                    var curentNewsItem = newsPost.FirstOrDefault().Return(b => b.NewsItem, null);
+                    if (curentNewsItem == null)
+                        continue;
+
+                    _newsService.DeleteNewsComments(newsPost.Select(b => b).ToList());
+
                     //update totals
-                    newsItem.CommentCount = newsItem.NewsComments.Count;
-                    _newsService.UpdateNews(newsItem);
+                    curentNewsItem.CommentCount = curentNewsItem.NewsComments.Count;
+                    _newsService.UpdateNews(curentNewsItem);
                 }
             }
 
