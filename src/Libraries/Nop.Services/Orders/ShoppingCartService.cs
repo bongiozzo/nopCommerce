@@ -1177,12 +1177,13 @@ namespace Nop.Services.Orders
         /// <param name="rentalEndDate">Rental end date</param>
         /// <param name="quantity">New shopping cart item quantity</param>
         /// <param name="resetCheckoutData">A value indicating whether to reset checkout data</param>
+        /// <param name="everyXDays">Generate orders every X days</param>
         /// <returns>Warnings</returns>
         public virtual IList<string> UpdateShoppingCartItem(Customer customer,
             int shoppingCartItemId, string attributesXml,
             decimal customerEnteredPrice,
             DateTime? rentalStartDate = null, DateTime? rentalEndDate = null, 
-            int quantity = 1, bool resetCheckoutData = true)
+            int quantity = 1, bool resetCheckoutData = true, int? everyXDays = null)
         {
             if (customer == null)
                 throw new ArgumentNullException("customer");
@@ -1208,6 +1209,7 @@ namespace Nop.Services.Orders
                     {
                         //if everything is OK, then update a shopping cart item
                         shoppingCartItem.Quantity = quantity;
+                        shoppingCartItem.EveryXDays = everyXDays;
                         shoppingCartItem.AttributesXml = attributesXml;
                         shoppingCartItem.CustomerEnteredPrice = customerEnteredPrice;
                         shoppingCartItem.RentalStartDateUtc = rentalStartDate;

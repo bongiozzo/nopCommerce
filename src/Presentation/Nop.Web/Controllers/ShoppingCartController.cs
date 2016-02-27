@@ -690,6 +690,7 @@ namespace Nop.Web.Controllers
                     ProductName = sci.Product.GetLocalized(x => x.Name),
                     ProductSeName = sci.Product.GetSeName(),
                     Quantity = sci.Quantity,
+                    EveryXDays = sci.EveryXDays,
                     AttributeInfo = _productAttributeFormatter.FormatAttributes(sci.Product, sci.AttributesXml),
                 };
 
@@ -2514,12 +2515,14 @@ namespace Nop.Web.Controllers
                         if (formKey.Equals(string.Format("itemquantity{0}", sci.Id), StringComparison.InvariantCultureIgnoreCase))
                         {
                             int newQuantity;
+                            int newEveryXDays;
+                            int.TryParse(form[string.Format("itemeveryxdays{0}", sci.Id)], out newEveryXDays);
                             if (int.TryParse(form[formKey], out newQuantity))
                             {
                                 var currSciWarnings = _shoppingCartService.UpdateShoppingCartItem(_workContext.CurrentCustomer,
                                     sci.Id, sci.AttributesXml, sci.CustomerEnteredPrice,
                                     sci.RentalStartDateUtc, sci.RentalEndDateUtc,
-                                    newQuantity, true);
+                                    newQuantity, true, newEveryXDays);
                                 innerWarnings.Add(sci.Id, currSciWarnings);
                             }
                             break;

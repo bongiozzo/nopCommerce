@@ -189,6 +189,7 @@ namespace Nop.Admin.Controllers
                         Store = store != null ? store.Name : "Unknown",
                         ProductId = sci.ProductId,
                         Quantity = sci.Quantity,
+                        EveryXDays = sci.EveryXDays,
                         ProductName = sci.Product.Name,
                         AttributeInfo = _productAttributeFormatter.FormatAttributes(sci.Product, sci.AttributesXml, sci.Customer),
                         UnitPrice = _priceFormatter.FormatPrice(_taxService.GetProductPrice(sci.Product, _priceCalculationService.GetUnitPrice(sci), out taxRate)),

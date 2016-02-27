@@ -222,6 +222,8 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="BongiozzoStore\Models\ProductOverviewModel.cs" />
+    <Compile Include="BongiozzoStore\Models\WishlistModel.cs" />
     <Compile Include="Controllers\BasePublicController.cs" />
     <Compile Include="Controllers\BoardsController.cs" />
     <Compile Include="Controllers\BackInStockSubscriptionController.cs" />
@@ -1150,6 +1152,7 @@
     <Content Include="Content\Roxy_Fileman\lang\it.json" />
     <Content Include="Content\Roxy_Fileman\lang\pl.json" />
     <Content Include="Content\Roxy_Fileman\lang\pt.json" />
+    <None Include="Properties\PublishProfiles\bongiozzostore.pubxml" />
     <None Include="Scripts\jquery-1.10.2.intellisense.js" />
     <Content Include="Scripts\fineuploader\iframe.xss.response-4.2.2.js" />
     <Content Include="Scripts\fineuploader\jquery.fineuploader-4.2.2.js" />
@@ -2055,7 +2058,9 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <Content Include="Themes\DefaultClean\theme.config" />
+    <Content Include="Themes\DefaultClean\theme.config">
+      <SubType>Designer</SubType>
+    </Content>
     <Content Include="Themes\DefaultClean\Views\Web.config" />
   </ItemGroup>
   <ItemGroup>

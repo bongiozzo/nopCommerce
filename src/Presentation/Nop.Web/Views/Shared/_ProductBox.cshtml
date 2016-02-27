@@ -31,6 +31,7 @@
         <h2 class="product-title">
             <a href="@Url.RouteUrl("Product", new { SeName = Model.SeName })">@Model.Name</a>
         </h2>
+
         @if (Model.ReviewOverviewModel.AllowCustomerReviews)
         {
             int ratingPercent = 0;
@@ -45,6 +46,15 @@
                 </div>
             </div>
         }
+
+        <div class="overview product-vendor">
+            @if (Model.VendorModel != null)
+            {
+                @*<span class="label">@T("Products.Vendor"):</span>*@
+                <span class="value"><a href="@Url.RouteUrl("Vendor", new { SeName = Model.VendorModel.SeName })">@Model.VendorModel.Name</a></span>
+            }
+        </div>
+
         <div class="description">
             @Html.Raw(Model.ShortDescription)
         </div>

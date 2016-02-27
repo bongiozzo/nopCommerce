@@ -18,6 +18,7 @@ using Nop.Services.Tax;
 using Nop.Web.Infrastructure.Cache;
 using Nop.Web.Models.Catalog;
 using Nop.Web.Models.Media;
+using Nop.Services.Vendors;
 
 namespace Nop.Web.Extensions
 {
@@ -79,6 +80,7 @@ namespace Nop.Web.Extensions
             ITaxService taxService,
             ICurrencyService currencyService,
             IPictureService pictureService,
+            IVendorService vendorService,
             IWebHelper webHelper,
             ICacheManager cacheManager,
             CatalogSettings catalogSettings,
@@ -370,6 +372,17 @@ namespace Nop.Web.Extensions
                     TotalReviews = product.ApprovedTotalReviews,
                     AllowCustomerReviews = product.AllowCustomerReviews
                 };
+
+                var vendor = vendorService.GetVendorById(product.VendorId);
+                if (vendor != null && !vendor.Deleted && vendor.Active)
+                {
+                    model.VendorModel = new VendorBriefInfoModel
+                    {
+                        Id = vendor.Id,
+                        Name = vendor.GetLocalized(x => x.Name),
+                        SeName = vendor.GetSeName(),
+                    };
+                }
 
                 models.Add(model);
             }

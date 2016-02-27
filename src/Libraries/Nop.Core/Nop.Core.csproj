@@ -90,6 +90,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="BongiozzoStore\Domain\ShoppingCartItem.cs" />
     <Compile Include="Caching\RedisCacheManager.cs" />
     <Compile Include="ComponentModel\WriteLockDisposable.cs" />
     <Compile Include="Domain\Catalog\Events.cs" />
