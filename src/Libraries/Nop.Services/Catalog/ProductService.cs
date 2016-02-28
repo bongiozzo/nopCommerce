@@ -1140,6 +1140,20 @@ namespace Nop.Services.Catalog
         }
         
         /// <summary>
+        /// Gets a products by SKU array
+        /// </summary>
+        /// <param name="skuArray">SKU array</param>
+        /// <returns>Products</returns>
+        public IList<Product> GetProductsBySku(string[] skuArray)
+        {
+            if (skuArray == null)
+                throw new ArgumentNullException("skuArray");
+
+            var query = _productRepository.Table;
+            return query.Where(p => skuArray.Contains(p.Sku)).ToList();
+        }
+
+        /// <summary>
         /// Update HasTierPrices property (used for performance optimization)
         /// </summary>
         /// <param name="product">Product</param>
@@ -1820,7 +1834,7 @@ namespace Nop.Services.Catalog
         #endregion
 
         #region Product reviews
-        
+
         /// <summary>
         /// Gets all product reviews
         /// </summary>
@@ -1829,10 +1843,12 @@ namespace Nop.Services.Catalog
         /// <param name="fromUtc">Item creation from; null to load all records</param>
         /// <param name="toUtc">Item item creation to; null to load all records</param>
         /// <param name="message">Search title or review text; null to load all records</param>
+        /// <param name="storeId">The store identifier; pass 0 to load all records</param>
+        /// <param name="productId">The product identifier; pass 0 to load all records</param>
         /// <returns>Reviews</returns>
         public virtual IList<ProductReview> GetAllProductReviews(int customerId, bool? approved,
             DateTime? fromUtc = null, DateTime? toUtc = null,
-            string message = null)
+            string message = null, int storeId = 0, int productId = 0)
         {
             var query = _productReviewRepository.Table;
             if (approved.HasValue)
@@ -1845,6 +1861,10 @@ namespace Nop.Services.Catalog
                 query = query.Where(c => toUtc.Value >= c.CreatedOnUtc);
             if (!String.IsNullOrEmpty(message))
                 query = query.Where(c => c.Title.Contains(message) || c.ReviewText.Contains(message));
+            if (storeId > 0)
+                query = query.Where(c => c.StoreId == storeId);
+            if (productId > 0)
+                query = query.Where(c => c.ProductId == productId);
 
             query = query.OrderBy(c => c.CreatedOnUtc);
             var content = query.ToList();
@@ -1901,6 +1921,8 @@ namespace Nop.Services.Catalog
             _productReviewRepository.Delete(productReview);
 
             _cacheManager.RemoveByPattern(PRODUCTS_PATTERN_KEY);
+            //event notification
+            _eventPublisher.EntityDeleted(productReview);
         }
 
         #endregion

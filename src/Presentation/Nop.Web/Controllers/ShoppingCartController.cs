@@ -333,6 +333,7 @@ namespace Nop.Web.Controllers
                     case AttributeControlType.RadioList:
                     case AttributeControlType.Checkboxes:
                     case AttributeControlType.ColorSquares:
+                    case AttributeControlType.ImageSquares:
                         {
                             if (!String.IsNullOrEmpty(selectedCheckoutAttributes))
                             {
@@ -1082,6 +1083,7 @@ namespace Nop.Web.Controllers
                     case AttributeControlType.DropdownList:
                     case AttributeControlType.RadioList:
                     case AttributeControlType.ColorSquares:
+                    case AttributeControlType.ImageSquares:
                         {
                             var ctrlAttributes = form[controlId];
                             if (!String.IsNullOrEmpty(ctrlAttributes))
@@ -1195,6 +1197,7 @@ namespace Nop.Web.Controllers
                     case AttributeControlType.DropdownList:
                     case AttributeControlType.RadioList:
                     case AttributeControlType.ColorSquares:
+                    case AttributeControlType.ImageSquares:
                         {
                             var ctrlAttributes = form[controlId];
                             if (!String.IsNullOrEmpty(ctrlAttributes))
@@ -2675,7 +2678,7 @@ namespace Nop.Web.Controllers
             //validate CAPTCHA
             if (_captchaSettings.Enabled && _captchaSettings.ShowOnEmailWishlistToFriendPage && !captchaValid)
             {
-                ModelState.AddModelError("", _localizationService.GetResource("Common.WrongCaptcha"));
+                ModelState.AddModelError("", _captchaSettings.GetWrongCaptchaMessage(_localizationService));
             }
 
             //check whether the current customer is guest and ia allowed to email wishlist

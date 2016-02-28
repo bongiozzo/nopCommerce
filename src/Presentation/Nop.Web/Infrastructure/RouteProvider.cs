@@ -352,6 +352,11 @@ namespace Nop.Web.Infrastructure
                             "rewardpoints/history",
                             new { controller = "Order", action = "CustomerRewardPoints" },
                             new[] { "Nop.Web.Controllers" });
+            routes.MapLocalizedRoute("CustomerRewardPointsPaged",
+                            "rewardpoints/history/page/{page}",
+                            new { controller = "Order", action = "CustomerRewardPoints" },
+                            new { page = @"\d+" },
+                            new[] { "Nop.Web.Controllers" });
             routes.MapLocalizedRoute("CustomerChangePassword",
                             "customer/changepassword",
                             new { controller = "Customer", action = "ChangePassword" },
@@ -372,11 +377,6 @@ namespace Nop.Web.Infrastructure
                             "boards/forumsubscriptions/{page}",
                             new { controller = "Boards", action = "CustomerForumSubscriptions", page = UrlParameter.Optional },
                             new { page = @"\d+" },
-                            new[] { "Nop.Web.Controllers" });
-            routes.MapLocalizedRoute("CustomerAddressDelete",
-                            "customer/addressdelete/{addressId}",
-                            new { controller = "Customer", action = "AddressDelete" },
-                            new { addressId = @"\d+" },
                             new[] { "Nop.Web.Controllers" });
             routes.MapLocalizedRoute("CustomerAddressEdit",
                             "customer/addressedit/{addressId}",

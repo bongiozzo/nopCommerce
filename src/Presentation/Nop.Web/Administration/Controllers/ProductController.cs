@@ -2857,12 +2857,8 @@ namespace Nop.Admin.Controllers
             );
             try
             {
-                byte[] bytes;
-                using (var stream = new MemoryStream())
-                {
-                    _exportManager.ExportProductsToXlsx(stream, products);
-                    bytes = stream.ToArray();
-                }
+                var bytes = _exportManager.ExportProductsToXlsx(products);
+                 
                 return File(bytes, "text/xls", "products.xlsx");
             }
             catch (Exception exc)
@@ -2893,12 +2889,8 @@ namespace Nop.Admin.Controllers
                 products = products.Where(p => p.VendorId == _workContext.CurrentVendor.Id).ToList();
             }
 
-            byte[] bytes = null;
-            using (var stream = new MemoryStream())
-            {
-                _exportManager.ExportProductsToXlsx(stream, products);
-                bytes = stream.ToArray();
-            }
+            var bytes = _exportManager.ExportProductsToXlsx(products);
+              
             return File(bytes, "text/xls", "products.xlsx");
         }
 
@@ -3612,6 +3604,7 @@ namespace Nop.Admin.Controllers
                             case AttributeControlType.RadioList:
                             case AttributeControlType.Checkboxes:
                             case AttributeControlType.ColorSquares:
+                            case AttributeControlType.ImageSquares:
                                 {
                                     if (!String.IsNullOrEmpty(productAttributeMapping.ConditionAttributeXml))
                                     {
@@ -3679,6 +3672,7 @@ namespace Nop.Admin.Controllers
                         case AttributeControlType.DropdownList:
                         case AttributeControlType.RadioList:
                         case AttributeControlType.ColorSquares:
+                        case AttributeControlType.ImageSquares:
                             {
                                 var ctrlAttributes = form[controlId];
                                 if (!String.IsNullOrEmpty(ctrlAttributes))
@@ -3825,7 +3819,7 @@ namespace Nop.Admin.Controllers
                         associatedProduct = _productService.GetProductById(x.AssociatedProductId);
                     }
                     var pictureThumbnailUrl = _pictureService.GetPictureUrl(x.PictureId, 75, false);
-                    //little hack here. Grid is rendered wrong way with <inmg> without "src" attribute
+                    //little hack here. Grid is rendered wrong way with <img> without "src" attribute
                     if (String.IsNullOrEmpty(pictureThumbnailUrl))
                         pictureThumbnailUrl = _pictureService.GetPictureUrl(null, 1, true);
                     return new ProductModel.ProductAttributeValueModel
@@ -3838,6 +3832,7 @@ namespace Nop.Admin.Controllers
                         AssociatedProductName = associatedProduct != null ? associatedProduct.Name  : "",
                         Name = x.ProductAttributeMapping.AttributeControlType != AttributeControlType.ColorSquares ? x.Name : string.Format("{0} - {1}", x.Name, x.ColorSquaresRgb),
                         ColorSquaresRgb = x.ColorSquaresRgb,
+                        ImageSquaresPictureId = x.ImageSquaresPictureId,
                         PriceAdjustment = x.PriceAdjustment,
                         PriceAdjustmentStr = x.AttributeValueType == AttributeValueType.Simple ? x.PriceAdjustment.ToString("G29") : "",
                         WeightAdjustment = x.WeightAdjustment,
@@ -3880,6 +3875,8 @@ namespace Nop.Admin.Controllers
             //color squares
             model.DisplayColorSquaresRgb = productAttributeMapping.AttributeControlType == AttributeControlType.ColorSquares;
             model.ColorSquaresRgb = "#000000";
+            //image squares
+            model.DisplayImageSquaresPicture = productAttributeMapping.AttributeControlType == AttributeControlType.ImageSquares;
 
             //default qantity for associated product
             model.Quantity = 1;
@@ -3937,6 +3934,12 @@ namespace Nop.Admin.Controllers
                 }
             }
 
+            //ensure a picture is uploaded
+            if (productAttributeMapping.AttributeControlType == AttributeControlType.ImageSquares && model.ImageSquaresPictureId == 0)
+            {
+                ModelState.AddModelError("", "Image is required");
+            }
+
             if (ModelState.IsValid)
             {
                 var pav = new ProductAttributeValue
@@ -3946,6 +3949,7 @@ namespace Nop.Admin.Controllers
                     AssociatedProductId = model.AssociatedProductId,
                     Name = model.Name,
                     ColorSquaresRgb = model.ColorSquaresRgb,
+                    ImageSquaresPictureId = model.ImageSquaresPictureId,
                     PriceAdjustment = model.PriceAdjustment,
                     WeightAdjustment = model.WeightAdjustment,
                     Cost = model.Cost,
@@ -4016,6 +4020,8 @@ namespace Nop.Admin.Controllers
                 Name = pav.Name,
                 ColorSquaresRgb = pav.ColorSquaresRgb,
                 DisplayColorSquaresRgb = pav.ProductAttributeMapping.AttributeControlType == AttributeControlType.ColorSquares,
+                ImageSquaresPictureId = pav.ImageSquaresPictureId,
+                DisplayImageSquaresPicture = pav.ProductAttributeMapping.AttributeControlType == AttributeControlType.ImageSquares,
                 PriceAdjustment = pav.PriceAdjustment,
                 WeightAdjustment = pav.WeightAdjustment,
                 Cost = pav.Cost,
@@ -4083,12 +4089,19 @@ namespace Nop.Admin.Controllers
                 }
             }
 
+            //ensure a picture is uploaded
+            if (pav.ProductAttributeMapping.AttributeControlType == AttributeControlType.ImageSquares && model.ImageSquaresPictureId == 0)
+            {
+                ModelState.AddModelError("", "Image is required");
+            }
+
             if (ModelState.IsValid)
             {
                 pav.AttributeValueTypeId = model.AttributeValueTypeId;
                 pav.AssociatedProductId = model.AssociatedProductId;
                 pav.Name = model.Name;
                 pav.ColorSquaresRgb = model.ColorSquaresRgb;
+                pav.ImageSquaresPictureId = model.ImageSquaresPictureId;
                 pav.PriceAdjustment = model.PriceAdjustment;
                 pav.WeightAdjustment = model.WeightAdjustment;
                 pav.Cost = model.Cost;
@@ -4418,6 +4431,7 @@ namespace Nop.Admin.Controllers
                     case AttributeControlType.DropdownList:
                     case AttributeControlType.RadioList:
                     case AttributeControlType.ColorSquares:
+                    case AttributeControlType.ImageSquares:
                         {
                             var ctrlAttributes = form[controlId];
                             if (!String.IsNullOrEmpty(ctrlAttributes))

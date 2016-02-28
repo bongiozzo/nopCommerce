@@ -221,6 +221,13 @@ namespace Nop.Services.Catalog
         Product GetProductBySku(string sku);
 
         /// <summary>
+        /// Gets a products by SKU array
+        /// </summary>
+        /// <param name="skuArray">SKU array</param>
+        /// <returns>Products</returns>
+        IList<Product> GetProductsBySku(string[] skuArray);
+
+        /// <summary>
         /// Update HasTierPrices property (used for performance optimization)
         /// </summary>
         /// <param name="product">Product</param>
@@ -433,10 +440,12 @@ namespace Nop.Services.Catalog
         /// <param name="fromUtc">Item creation from; null to load all records</param>
         /// <param name="toUtc">Item item creation to; null to load all records</param>
         /// <param name="message">Search title or review text; null to load all records</param>
+        /// <param name="storeId">The store identifier; pass 0 to load all records</param>
+        /// <param name="productId">The product identifier; pass 0 to load all records</param>
         /// <returns>Reviews</returns>
         IList<ProductReview> GetAllProductReviews(int customerId, bool? approved,
             DateTime? fromUtc = null, DateTime? toUtc = null,
-            string message = null);
+            string message = null, int storeId = 0, int productId = 0);
 
         /// <summary>
         /// Gets product review

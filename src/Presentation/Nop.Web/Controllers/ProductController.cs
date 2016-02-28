@@ -355,7 +355,7 @@ namespace Nop.Web.Controllers
                     product.ProductTags
                     //filter by store
                     .Where(x => _productTagService.GetProductCount(x.Id, _storeContext.CurrentStore.Id) > 0)
-                    .Select(x =>  new ProductTagModel
+                    .Select(x => new ProductTagModel
                     {
                         Id = x.Id,
                         Name = x.GetLocalized(y => y.Name),
@@ -643,7 +643,7 @@ namespace Nop.Web.Controllers
                 if (!String.IsNullOrEmpty(attribute.ValidationFileAllowedExtensions))
                 {
                     attributeModel.AllowedFileExtensions = attribute.ValidationFileAllowedExtensions
-                        .Split(new[] {','}, StringSplitOptions.RemoveEmptyEntries)
+                        .Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
                         .ToList();
                 }
 
@@ -677,7 +677,29 @@ namespace Nop.Web.Controllers
                             valueModel.PriceAdjustmentValue = priceAdjustment;
                         }
 
-                        //picture
+                        //"image square" picture (with with "image squares" attribute type only)
+                        if (attributeValue.ImageSquaresPictureId > 0)
+                        {
+                            var productAttributeImageSquarePictureCacheKey = string.Format(ModelCacheEventConsumer.PRODUCTATTRIBUTE_IMAGESQUARE_PICTURE_MODEL_KEY,
+                                   attributeValue.ImageSquaresPictureId,
+                                   _webHelper.IsCurrentConnectionSecured(),
+                                   _storeContext.CurrentStore.Id);
+                            valueModel.ImageSquaresPictureModel = _cacheManager.Get(productAttributeImageSquarePictureCacheKey, () =>
+                            {
+                                var imageSquaresPicture = _pictureService.GetPictureById(attributeValue.ImageSquaresPictureId);
+                                if (imageSquaresPicture != null)
+                                {
+                                    return new PictureModel
+                                    {
+                                        FullSizeImageUrl = _pictureService.GetPictureUrl(imageSquaresPicture),
+                                        ImageUrl = _pictureService.GetPictureUrl(imageSquaresPicture, _mediaSettings.ImageSquarePictureSize)
+                                    };
+                                }
+                                return new PictureModel();
+                            });
+                        }
+
+                        //picture of a product attribute value
                         if (attributeValue.PictureId > 0)
                         {
                             var productAttributePictureCacheKey = string.Format(ModelCacheEventConsumer.PRODUCTATTRIBUTE_PICTURE_MODEL_KEY,
@@ -710,6 +732,7 @@ namespace Nop.Web.Controllers
                         case AttributeControlType.RadioList:
                         case AttributeControlType.Checkboxes:
                         case AttributeControlType.ColorSquares:
+                        case AttributeControlType.ImageSquares:
                             {
                                 if (!String.IsNullOrEmpty(updatecartitem.AttributesXml))
                                 {
@@ -800,13 +823,8 @@ namespace Nop.Web.Controllers
 
             #region Product review overview
 
-            model.ProductReviewOverview = new ProductReviewOverviewModel
-            {
-                ProductId = product.Id,
-                RatingSum = product.ApprovedRatingSum,
-                TotalReviews = product.ApprovedTotalReviews,
-                AllowCustomerReviews = product.AllowCustomerReviews
-            };
+            model.ProductReviewOverview = this.PrepareProductReviewOverviewModel(_storeContext, _catalogSettings,
+                _cacheManager, product);
 
             #endregion
 
@@ -901,7 +919,9 @@ namespace Nop.Web.Controllers
             model.ProductName = product.GetLocalized(x => x.Name);
             model.ProductSeName = product.GetSeName();
 
-            var productReviews = product.ProductReviews.Where(pr => pr.IsApproved).OrderBy(pr => pr.CreatedOnUtc);
+            var productReviews = _catalogSettings.ShowProductReviewsPerStore
+                ? product.ProductReviews.Where(pr => pr.IsApproved && pr.StoreId == _storeContext.CurrentStore.Id).OrderBy(pr => pr.CreatedOnUtc)
+                : product.ProductReviews.Where(pr => pr.IsApproved).OrderBy(pr => pr.CreatedOnUtc);
             foreach (var pr in productReviews)
             {
                 var customer = pr.Customer;
@@ -1158,7 +1178,7 @@ namespace Nop.Web.Controllers
                                     string.Format("{0}: New products", _storeContext.CurrentStore.GetLocalized(x => x.Name)),
                                     "Information about products",
                                     new Uri(_webHelper.GetStoreLocation(false)),
-                                    "NewProductsRSS",
+                                    string.Format("urn:store:{0}:newProducts", _storeContext.CurrentStore.Id),
                                     DateTime.UtcNow);
 
             if (!_catalogSettings.NewProductsEnabled)
@@ -1177,7 +1197,7 @@ namespace Nop.Web.Controllers
                 string productUrl = Url.RouteUrl("Product", new { SeName = product.GetSeName() }, "http");
                 string productName = product.GetLocalized(x => x.Name);
                 string productDescription = product.GetLocalized(x => x.ShortDescription);
-                var item = new SyndicationItem(productName, productDescription, new Uri(productUrl), String.Format("NewProduct:{0}", product.Id), product.CreatedOnUtc);
+                var item = new SyndicationItem(productName, productDescription, new Uri(productUrl), String.Format("urn:store:{0}:newProducts:product:{1}", _storeContext.CurrentStore.Id, product.Id), product.CreatedOnUtc);
                 items.Add(item);
                 //uncomment below if you want to add RSS enclosure for pictures
                 //var picture = _pictureService.GetPicturesByProductId(product.Id, 1).FirstOrDefault();
@@ -1275,7 +1295,7 @@ namespace Nop.Web.Controllers
             //validate CAPTCHA
             if (_captchaSettings.Enabled && _captchaSettings.ShowOnProductReviewPage && !captchaValid)
             {
-                ModelState.AddModelError("", _localizationService.GetResource("Common.WrongCaptcha"));
+                ModelState.AddModelError("", _captchaSettings.GetWrongCaptchaMessage(_localizationService));
             }
 
             if (_workContext.CurrentCustomer.IsGuest() && !_catalogSettings.AllowAnonymousUsersToReviewProduct)
@@ -1302,6 +1322,7 @@ namespace Nop.Web.Controllers
                     HelpfulNoTotal = 0,
                     IsApproved = isApproved,
                     CreatedOnUtc = DateTime.UtcNow,
+                    StoreId = _storeContext.CurrentStore.Id,
                 };
                 product.ProductReviews.Add(productReview);
                 _productService.UpdateProduct(product);
@@ -1433,7 +1454,7 @@ namespace Nop.Web.Controllers
             //validate CAPTCHA
             if (_captchaSettings.Enabled && _captchaSettings.ShowOnEmailProductToFriendPage && !captchaValid)
             {
-                ModelState.AddModelError("", _localizationService.GetResource("Common.WrongCaptcha"));
+                ModelState.AddModelError("", _captchaSettings.GetWrongCaptchaMessage(_localizationService));
             }
 
             //check whether the current customer is guest and ia allowed to email a friend

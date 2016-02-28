@@ -282,6 +282,7 @@ namespace Nop.Web.Controllers
                         }
                         break;
                     case AttributeControlType.ColorSquares:
+                    case AttributeControlType.ImageSquares:
                     case AttributeControlType.Datepicker:
                     case AttributeControlType.FileUpload:
                     default:
@@ -599,6 +600,7 @@ namespace Nop.Web.Controllers
                         break;
                     case AttributeControlType.Datepicker:
                     case AttributeControlType.ColorSquares:
+                    case AttributeControlType.ImageSquares:
                     case AttributeControlType.FileUpload:
                         //not supported customer attributes
                     default:
@@ -638,7 +640,7 @@ namespace Nop.Web.Controllers
             //validate CAPTCHA
             if (_captchaSettings.Enabled && _captchaSettings.ShowOnLoginPage && !captchaValid)
             {
-                ModelState.AddModelError("", _localizationService.GetResource("Common.WrongCaptcha"));
+                ModelState.AddModelError("", _captchaSettings.GetWrongCaptchaMessage(_localizationService));
             }
 
             if (ModelState.IsValid)
@@ -916,7 +918,7 @@ namespace Nop.Web.Controllers
             //validate CAPTCHA
             if (_captchaSettings.Enabled && _captchaSettings.ShowOnRegistrationPage && !captchaValid)
             {
-                ModelState.AddModelError("", _localizationService.GetResource("Common.WrongCaptcha"));
+                ModelState.AddModelError("", _captchaSettings.GetWrongCaptchaMessage(_localizationService));
             }
 
             if (ModelState.IsValid)
@@ -1388,6 +1390,8 @@ namespace Nop.Web.Controllers
             return View(model);
         }
 
+        [HttpPost]
+        [PublicAntiForgery]
         public ActionResult RemoveExternalAssociation(int id)
         {
             if (!_workContext.CurrentCustomer.IsRegistered())
@@ -1398,11 +1402,19 @@ namespace Nop.Web.Controllers
                 .FirstOrDefault(x => x.Id == id);
 
             if (ear == null)
-                return RedirectToAction("Info");
+            {
+                return Json(new
+                {
+                    redirect = Url.Action("Info"),
+                });
+            }
 
             _openAuthenticationService.DeletExternalAuthenticationRecord(ear);
 
-            return RedirectToAction("Info");
+            return Json(new
+            {
+                redirect = Url.Action("Info"),
+            });
         }
 
         #endregion
@@ -1438,6 +1450,8 @@ namespace Nop.Web.Controllers
             return View(model);
         }
 
+        [HttpPost]
+        [PublicAntiForgery]
         [NopHttpsRequirement(SslRequirement.Yes)]
         public ActionResult AddressDelete(int addressId)
         {
@@ -1456,7 +1470,11 @@ namespace Nop.Web.Controllers
                 _addressService.DeleteAddress(address);
             }
 
-            return RedirectToRoute("CustomerAddresses");
+            //redirect to the address list page
+            return Json(new
+            {
+                redirect = Url.RouteUrl("CustomerAddresses"),
+            });
         }
 
         [NopHttpsRequirement(SslRequirement.Yes)]

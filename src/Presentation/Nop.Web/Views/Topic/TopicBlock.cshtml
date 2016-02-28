@@ -3,7 +3,7 @@
 @if (Model.IsPasswordProtected)
 {
     <script type="text/javascript">
-        $(function() {
+        $(document).ready(function () {
             $('#button-password-@Model.Id').click(function() {
                 var postData = {
                     id: $("#@Html.FieldIdFor(model => model.Id)").val(),
@@ -44,6 +44,7 @@
     <div class="topic-password" id="ph-password-@Model.Id">
         @using (Html.BeginRouteForm("TopicAuthenticate"))
         {
+            @Html.AntiForgeryToken()
             @Html.HiddenFor(model => model.Id)
             <div class="enter-password-title">
                 @T("Topic.EnterPassword")
