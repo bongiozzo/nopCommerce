@@ -367,6 +367,17 @@ namespace Nop.Web.Extensions
                 //reviews
                 model.ReviewOverviewModel = controller.PrepareProductReviewOverviewModel(storeContext, catalogSettings, cacheManager, product);
 
+                var vendor = vendorService.GetVendorById(product.VendorId);
+                if (vendor != null && !vendor.Deleted && vendor.Active)
+                {
+                    model.VendorModel = new VendorBriefInfoModel
+                    {
+                        Id = vendor.Id,
+                        Name = vendor.GetLocalized(x => x.Name),
+                        SeName = vendor.GetSeName(),
+                    };
+                }
+
                 models.Add(model);
             }
             return models;
