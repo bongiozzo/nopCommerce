@@ -1171,6 +1171,14 @@ namespace Nop.Web.Controllers
                 }
             }
 
+            //validate conditional attributes (if specified)
+            foreach (var attribute in checkoutAttributes)
+            {
+                var conditionMet = _checkoutAttributeParser.IsConditionMet(attribute, attributesXml);
+                if (conditionMet.HasValue && !conditionMet.Value)
+                    attributesXml = _checkoutAttributeParser.RemoveCheckoutAttribute(attributesXml, attribute);
+            }
+
             //save checkout attributes
             _genericAttributeService.SaveAttribute(_workContext.CurrentCustomer, SystemCustomerAttributeNames.CheckoutAttributes, attributesXml, _storeContext.CurrentStore.Id);
         }
@@ -1870,6 +1878,41 @@ namespace Nop.Web.Controllers
         }
 
         [HttpPost]
+        [ValidateInput(false)]
+        public ActionResult CheckoutAttributeChange(FormCollection form)
+        {
+            var cart = _workContext.CurrentCustomer.ShoppingCartItems
+                .Where(sci => sci.ShoppingCartType == ShoppingCartType.ShoppingCart)
+                .LimitPerStore(_storeContext.CurrentStore.Id)
+                .ToList();
+
+            ParseAndSaveCheckoutAttributes(cart, form);
+            var attributeXml = _workContext.CurrentCustomer.GetAttribute<string>(SystemCustomerAttributeNames.CheckoutAttributes,
+                _genericAttributeService, _storeContext.CurrentStore.Id);
+
+            var enabledAttributeIds = new List<int>();
+            var disabledAttributeIds = new List<int>();
+            var attributes = _checkoutAttributeService.GetAllCheckoutAttributes(_storeContext.CurrentStore.Id, !cart.RequiresShipping());
+            foreach (var attribute in attributes)
+            {
+                var conditionMet = _checkoutAttributeParser.IsConditionMet(attribute, attributeXml);
+                if (conditionMet.HasValue)
+                {
+                    if (conditionMet.Value)
+                        enabledAttributeIds.Add(attribute.Id);
+                    else
+                        disabledAttributeIds.Add(attribute.Id);
+                }
+            }
+
+            return Json(new
+            {
+                enabledattributeids = enabledAttributeIds.ToArray(),
+                disabledattributeids = disabledAttributeIds.ToArray()
+            });
+        }
+
+        [HttpPost]
         public ActionResult UploadFileProductAttribute(int attributeId)
         {
             var attribute = _productAttributeService.GetProductAttributeMappingById(attributeId);
@@ -1879,7 +1922,7 @@ namespace Nop.Web.Controllers
                 {
                     success = false,
                     downloadGuid = Guid.Empty,
-                }, "text/plain");
+                }, MimeTypes.TextPlain);
             }
 
             //we process it distinct ways based on a browser
@@ -1924,7 +1967,7 @@ namespace Nop.Web.Controllers
                         success = false,
                         message = string.Format(_localizationService.GetResource("ShoppingCart.MaximumUploadedFileSize"), attribute.ValidationFileMaximumSize.Value),
                         downloadGuid = Guid.Empty,
-                    }, "text/plain");
+                    }, MimeTypes.TextPlain);
                 }
             }
 
@@ -1950,7 +1993,7 @@ namespace Nop.Web.Controllers
                 message = _localizationService.GetResource("ShoppingCart.FileUploaded"),
                 downloadUrl = Url.Action("GetFileUpload", "Download", new { downloadId = download.DownloadGuid }),
                 downloadGuid = download.DownloadGuid,
-            }, "text/plain");
+            }, MimeTypes.TextPlain);
         }
 
         [HttpPost]
@@ -1963,7 +2006,7 @@ namespace Nop.Web.Controllers
                 {
                     success = false,
                     downloadGuid = Guid.Empty,
-                }, "text/plain");
+                }, MimeTypes.TextPlain);
             }
 
             //we process it distinct ways based on a browser
@@ -2008,7 +2051,7 @@ namespace Nop.Web.Controllers
                         success = false,
                         message = string.Format(_localizationService.GetResource("ShoppingCart.MaximumUploadedFileSize"), attribute.ValidationFileMaximumSize.Value),
                         downloadGuid = Guid.Empty,
-                    }, "text/plain");
+                    }, MimeTypes.TextPlain);
                 }
             }
 
@@ -2034,7 +2077,7 @@ namespace Nop.Web.Controllers
                 message = _localizationService.GetResource("ShoppingCart.FileUploaded"),
                 downloadUrl = Url.Action("GetFileUpload", "Download", new { downloadId = download.DownloadGuid }),
                 downloadGuid = download.DownloadGuid,
-            }, "text/plain");
+            }, MimeTypes.TextPlain);
         }
 
 
