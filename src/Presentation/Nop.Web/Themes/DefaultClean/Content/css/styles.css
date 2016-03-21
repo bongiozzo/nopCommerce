@@ -983,10 +983,12 @@ label, label + * {
 }
 .footer-powered-by {
 	margin: 10px 0 0;
+    color: #fff;
 }
 .footer-powered-by a {
 	font-weight: bold;
-	color: #4ab2f1;
+    color: #fff;
+	/*color: #4ab2f1;*/
 }
 .footer-powered-by a:hover {
 	text-decoration: underline;
